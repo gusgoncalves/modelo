@@ -16,6 +16,9 @@ cd modelo
 ```bash
 code .
 ```
+```bash
+composer update
+```
 Abrindo o VSCode execute o terminal dentro do próprio VSCode
 ## Setup 
 ```php
