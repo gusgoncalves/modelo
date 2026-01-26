@@ -19,7 +19,7 @@ code .
 Abrindo o VSCode execute o terminal dentro do próprio VSCode
 ## Setup 
 ```php
-  php spark serve
+php spark serve
 ```
 abra o navegador e siga os passos da instalção ou execute pelo navegador:
 [http://localhost:8080](http://localhost:8080)
