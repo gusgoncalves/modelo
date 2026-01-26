@@ -1,0 +1,213 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Controllers\BaseController;
+
+class Install extends BaseController
+{
+    protected $session;
+
+    public function initController(
+        \CodeIgniter\HTTP\RequestInterface $request,
+        \CodeIgniter\HTTP\ResponseInterface $response,
+        \Psr\Log\LoggerInterface $logger
+    ) {
+        parent::initController($request, $response, $logger);
+
+        //$lock = ROOTPATH . 'public/install.lock';
+
+        $this->session = session();
+    }
+
+    public function index()
+    {
+        return view('install/step1_system', [
+            'step' => 1,
+            'systemName' => 'Instalação',
+        ]);
+    }
+
+    public function system()
+    {
+        $logoName = null;
+        $file = $this->request->getFile('system_logo');
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            $logoName = 'logo_' . time() . '.' . $file->getExtension();
+            $file->move(ROOTPATH . 'public/assets/img', $logoName);
+        }
+        $this->session->set([
+            'system_name' => $this->request->getPost('system_name'),
+            'system_logo' => $logoName,
+            'base_url'    => $this->request->getPost('base_url'),
+            'auth_driver' => $this->request->getPost('auth_driver')
+        ]);
+
+        return view('install/step2_database');
+    }
+
+    public function database()
+    {
+        $this->session->set($this->request->getPost());
+        return view('install/step3_admin');
+    }
+
+    public function admin()
+    {
+        $adminData = [
+            'matricula' => $this->request->getPost('matricula'),
+            'nome'      => $this->request->getPost('nome'),
+            'cpf'       => $this->request->getPost('cpf'),
+            'email'     => $this->request->getPost('email'),
+            'permissao' => $this->request->getPost('permissao'),
+            'senha'     => $this->request->getPost('senha'), // pode ser null
+        ];
+        file_put_contents(
+            WRITEPATH . 'install_admin.json',
+            json_encode($adminData, JSON_PRETTY_PRINT)
+        );
+        $s = $this->session;
+
+        $driver = $s->get('db_driver');
+        $port = $driver === 'Postgre' ? 5432 : 3306;
+
+        if ($driver === 'Postgre') {
+            $charset  = 'UTF8';
+            $collate  = '';
+        } else {
+            $charset  = 'utf8mb4';
+            $collate  = 'utf8mb4_unicode_ci';
+        }
+        // GERA .env
+        $env = <<<ENV
+
+        #--------------------------------------------------------------------
+        # ENVIRONMENT
+        #--------------------------------------------------------------------
+
+        CI_ENVIRONMENT = development
+
+        #--------------------------------------------------------------------
+        # AUTH
+        #--------------------------------------------------------------------
+
+        auth.driver = '{$s->get('auth_driver')}'
+        auth.ldap.host = 172.16.12.10
+        auth.ldap.domain = pmpg.local
+
+        #--------------------------------------------------------------------
+        # APP
+        #--------------------------------------------------------------------
+
+        app.baseURL = '{$s->get('base_url')}'
+        app.appTimezone = 'America/Sao_Paulo'
+        app.forceGlobalSecureRequests = false
+        app.CSPEnabled = false
+
+        app.systemName = '{$s->get('system_name')}'
+        app.systemLogo = '{$s->get('system_logo')}'
+        
+        #--------------------------------------------------------------------
+        # SECURITY
+        #--------------------------------------------------------------------
+
+        security.csrfProtection = 'session'
+        security.tokenRandomize = true        
+
+        database.default.hostname = '{$s->get('db_host')}'
+        database.default.database = '{$s->get('db_name')}'
+        database.default.username = '{$s->get('db_user')}'
+        database.default.password = '{$s->get('db_pass')}'
+        database.default.DBDriver = '{$driver}'
+        database.default.port = {$port}
+        database.default.charset = {$charset}
+        database.default.DBCollat = '{$collate}'
+        database.default.pConnect = false
+        database.default.DBDebug = true
+
+        #--------------------------------------------------------------------
+        # SESSION
+        #--------------------------------------------------------------------
+
+        session.driver = 'CodeIgniter\Session\Handlers\FileHandler'
+        session.cookieName = ci_session
+        session.expiration = 7200
+        session.savePath = writable/session
+        session.matchIP = false
+        session.regenerateDestroy = false
+        ENV;
+
+        file_put_contents(ROOTPATH . '.env', trim($env));
+
+        // BLOQUEIA REINSTALAÇÃO
+       file_put_contents(ROOTPATH . 'public/install.lock', 'env_created');
+
+        return redirect()->to('/install/run');
+    }
+
+    public function run()
+    {
+        if (!file_exists(ROOTPATH . '.env')) {
+            die('Arquivo .env não encontrado');
+        }
+        // garante que o .env existe
+        if (!file_exists(ROOTPATH . 'public/install.lock')) {
+            return redirect()->to('/install');
+        }
+        if (file_get_contents(ROOTPATH . 'public/install.lock') !== 'env_created') {
+            return redirect()->to('/login');
+        }
+
+        // roda migrations
+        $migrate = \Config\Services::migrations();
+        $migrate->latest();
+
+         // dados do admin salvos antes
+        $adminFile = WRITEPATH . 'install_admin.json';
+
+        if (!file_exists($adminFile)) {
+            die('Dados do administrador não encontrados.');
+        }
+        $admin = json_decode(file_get_contents($adminFile), true);
+        
+        $matricula = !empty($admin['matricula'])
+            ? trim($admin['matricula'])
+            : trim($admin['cpf']);
+
+        if(!$matricula){
+            die('Matricula é obrigatória para usuários LDAP.');
+        }
+
+        $db = \Config\Database::connect();
+        $authDriver = env('auth.driver');
+
+        $data = [
+            'matricula' => $matricula,
+            'nome'      => $admin['nome'],
+            'cpf'       => $admin['cpf'],
+            'email'     => $admin['email'],
+            'permissao' => $admin['permissao'],
+        ];
+        if ($authDriver ==='database'){
+            if (empty($admin['senha'])) {
+                throw new \RuntimeException('Senha do administrador não informada');
+            }
+            $data['senha'] = password_hash($admin['senha'],PASSWORD_DEFAULT);
+        }
+
+        $db->table('usuarios')->insert($data);
+    
+        // finaliza instalação
+        file_put_contents(ROOTPATH . 'public/install.lock', 'instalado');
+
+        // limpa sessão
+        unlink($adminFile);
+
+        return redirect()->to('/install/success');
+    }
+
+    public function success()
+    {
+        return view('install/success');
+    }
+}

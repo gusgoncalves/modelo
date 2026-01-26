@@ -1,0 +1,1 @@
+__ci_last_regenerate|i:1769015892;_ci_previous_url|s:38:"http://localhost:8080/install/database";system_name|s:5:"Teste";system_logo|s:19:"logo_1769015727.png";base_url|s:22:"http://localhost:8080/";auth_driver|s:4:"ldap";db_host|s:9:"localhost";db_name|s:12:"autenticacao";db_user|s:4:"root";db_pass|s:4:"root";db_driver|s:6:"MySQLi";
