@@ -22,3 +22,11 @@ $routes->group('dashboard',['filter'=>'auth'], function($routes) {
     $routes->get('/', 'Dashboard::index');
     // Futuros módulos entrarão aqui
 });
+
+$routes->group('usuarios', function($routes){
+    $routes->get('/', 'Usuarios::index');
+    $routes->get('datatable', 'Usuarios::datatable');
+    $routes->get('edit/(:num)', 'Usuarios::edit/$1');
+    $routes->post('save', 'Usuarios::save');
+    $routes->post('delete/(:num)', 'Usuarios::delete/$1');
+});

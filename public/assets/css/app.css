@@ -1,0 +1,42 @@
+
+  html, body {
+      height: 100%;
+  }
+  body {
+      display: flex;
+      flex-direction: column;
+  }
+  .app-wrapper {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+  }
+  .sidebar {
+      width: 260px;
+      min-height: 100%;
+  }
+  @media (max-width: 991px) {
+      .sidebar {
+          display: none;
+      }
+  }
+  main {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+  }
+  footer {
+      height: 50px;
+  }
+  :root {
+  --navbar-bg: #1988c3;
+  }
+
+  .navbar-custom {
+      background-color: var(--navbar-bg) !important;
+  }
+  .navbar-logo {
+      height: 36px;       /* tamanho ideal para navbar */
+      width: auto;        /* mantém proporção */
+      max-height: 40px;   /* segurança */
+  }

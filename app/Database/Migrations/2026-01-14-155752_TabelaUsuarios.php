@@ -43,6 +43,11 @@ class CreateUserTable extends Migration
                 'constraint' => 255,
                 null,
             ],
+            'ativo' => [
+                'type' => 'INT',
+                'constraint' => 1,
+                'default' => 1,
+            ],
         ]);
         $this->forge->addKey('id', true);
         $this->forge->createTable('usuarios');
