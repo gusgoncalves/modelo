@@ -5,6 +5,7 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
+$routes->get('/install/check', 'Install::check');
 $routes->get('/install', 'Install::index');
 $routes->post('/install/system', 'Install::system');
 $routes->post('/install/database', 'Install::database');

@@ -22,9 +22,132 @@ class Install extends BaseController
 
     public function index()
     {
+        // se ainda não fez o check nessa sessão, manda pro check
+        if (!$this->session->get('install_checked')) {
+            return redirect()->to('/install/check');
+        }
+
+        // passou no check, entra na instalação normal
         return view('install/step1_system', [
             'step' => 1,
             'systemName' => 'Instalação',
+        ]);
+    }
+    public function check()
+    {
+        $checks = [];
+
+        // PHP
+        $checks[] = [
+            'label' => 'PHP >= 8.1',
+            'ok'    => version_compare(PHP_VERSION, '8.1', '>='),
+            'value' => PHP_VERSION,
+        ];
+
+        // Extensões base (quase sempre necessárias)
+        $requiredExtensions = [
+            'openssl'  => 'OpenSSL (HTTPS/segurança)',
+            'curl'     => 'cURL (requisições externas)',
+            'intl'     => 'intl (formatação/locale)',
+            'mbstring' => 'mbstring (strings UTF-8)',
+            'fileinfo' => 'fileinfo (uploads e validações)',
+        ];
+
+        foreach ($requiredExtensions as $ext => $label) {
+            $checks[] = [
+                'label' => "Extensão {$label}",
+                'ok'    => extension_loaded($ext),
+                'value' => extension_loaded($ext) ? 'OK' : 'Não instalada',
+            ];
+        }
+
+        // Banco: drivers PDO
+        $pdoDrivers = class_exists(\PDO::class) ? \PDO::getAvailableDrivers() : [];
+
+        $checks[] = [
+            'label' => 'PDO habilitado',
+            'ok'    => class_exists(\PDO::class),
+            'value' => class_exists(\PDO::class) ? 'OK' : 'Não habilitado',
+        ];
+
+        $checks[] = [
+            'label' => 'PDO MySQL (pdo_mysql)',
+            'ok'    => in_array('mysql', $pdoDrivers, true),
+            'value' => in_array('mysql', $pdoDrivers, true) ? 'OK' : 'Não instalado',
+        ];
+
+        $checks[] = [
+            'label' => 'PDO PostgreSQL (pdo_pgsql)',
+            'ok'    => in_array('pgsql', $pdoDrivers, true),
+            'value' => in_array('pgsql', $pdoDrivers, true) ? 'OK' : 'Não instalado',
+        ];
+
+        // Drivers nativos (não são obrigatórios, mas ajudam)
+        $checks[] = [
+            'label' => 'MySQLi (opcional)',
+            'ok'    => extension_loaded('mysqli'),
+            'value' => extension_loaded('mysqli') ? 'OK' : 'Não instalado',
+        ];
+
+        $checks[] = [
+            'label' => 'PgSQL (opcional)',
+            'ok'    => extension_loaded('pgsql'),
+            'value' => extension_loaded('pgsql') ? 'OK' : 'Não instalado',
+        ];
+
+        // LDAP (só obrigatório se for usar AD, mas já avisamos aqui)
+        $checks[] = [
+            'label' => 'LDAP (necessário se usar autenticação AD)',
+            'ok'    => extension_loaded('ldap'),
+            'value' => extension_loaded('ldap') ? 'OK' : 'Não instalado',
+        ];
+
+        // Permissões
+        $checks[] = [
+            'label' => 'Pasta writable/ com permissão de escrita',
+            'ok'    => is_writable(WRITEPATH),
+            'value' => is_writable(WRITEPATH) ? 'OK' : 'Sem permissão',
+        ];
+
+        $checks[] = [
+            'label' => 'Pasta writable/cache com permissão',
+            'ok'    => is_writable(WRITEPATH . 'cache'),
+            'value' => is_writable(WRITEPATH . 'cache') ? 'OK' : 'Sem permissão',
+        ];
+
+        $checks[] = [
+            'label' => 'Pasta writable/session com permissão',
+            'ok'    => is_writable(WRITEPATH . 'session'),
+            'value' => is_writable(WRITEPATH . 'session') ? 'OK' : 'Sem permissão',
+        ];
+
+        $checks[] = [
+            'label' => 'Pasta public/assets/img com permissão',
+            'ok'    => is_dir(ROOTPATH . 'public/assets/img') && is_writable(ROOTPATH . 'public/assets/img'),
+            'value' => (is_dir(ROOTPATH . 'public/assets/img') && is_writable(ROOTPATH . 'public/assets/img')) ? 'OK' : 'Sem permissão ou não existe',
+        ];
+
+        // .env
+        $envPath = ROOTPATH . '.env';
+
+        $checks[] = [
+            'label' => 'Permissão para criar/editar .env',
+            'ok'    => (!file_exists($envPath) && is_writable(ROOTPATH)) || (file_exists($envPath) && is_writable($envPath)),
+            'value' => file_exists($envPath) ? (is_writable($envPath) ? 'OK' : 'Sem permissão') : 'Será criado',
+        ];
+
+        // Resultado final
+        $allOk = !in_array(false, array_column($checks, 'ok'), true);
+
+         if ($allOk) {
+            $this->session->set('install_checked', true);
+        } else {
+            $this->session->remove('install_checked');
+        }
+
+        return view('install/check', [
+            'checks' => $checks,
+            'allOk'  => $allOk,
         ]);
     }
 
