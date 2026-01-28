@@ -35,16 +35,20 @@
     </tbody>
 </table>
 
-<?php if ($allOk): ?>
+<?php if ($allOk && $canInstall): ?>
     <div class="alert alert-success">
-        Tudo certo. Pode instalar sem medo.
+        Tudo certo até então. Pode continuar.
     </div>
     <a href="<?= base_url('install') ?>" class="btn btn-success w-100">
         Continuar Instalação
     </a>
 <?php else: ?>
     <div class="alert alert-warning">
-        Tem item obrigatório faltando. Corrige isso antes de instalar.
+        Tem item obrigatório faltando. </br>
+        <strong>Atenção:</strong> Se você ativar as extensões no <code>php.ini</code>,
+        não se esqueça que precisa <strong>reiniciar o servidor também</strong>:
+        <pre class="mb-0">CTRL + C
+        php spark serve</pre>
     </div>
 
     <a href="<?= base_url('install/check') ?>" class="btn btn-secondary w-100">

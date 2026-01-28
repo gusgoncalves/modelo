@@ -4,14 +4,13 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Controllers\Base\CrudController;
-use CodeIgniter\HTTP\ResponseInterface;
 use App\Models\UserModel;
 
 
 class Usuarios extends CrudController
 {
     protected $model;
-    protected $fields = ['matricula','nome','email','permissao','cpf'];
+    protected $fields = ['matricula','nome','email','permissao','cpf','ativo']; //corresponde aos campos que serão trabalhados
     protected array $formFields = [
          [
             'name'  => 'matricula',
@@ -42,7 +41,7 @@ class Usuarios extends CrudController
             'type'  => 'select',
             'options' => [
                 'admin'   => 'Administrador',
-                'usuario' => 'Usuário'
+                'usuario' => 'User'
             ]
         ],
         [
@@ -63,6 +62,7 @@ class Usuarios extends CrudController
         ['data' => 'email', 'title' => 'Email'],
         ['data' => 'permissao', 'title' => 'Permissão'],
         ['data' => 'cpf', 'title' => 'CPF'],
+        ['data' => 'ativo', 'title' => 'Ativo'],
     ];
 
     public function __construct()

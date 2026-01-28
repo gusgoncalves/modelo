@@ -11,7 +11,7 @@
 
 <table id="datatable" class="table table-striped table-bordered w-100"></table>
 
-<?= view('crud/modal',['title' => $title,'fieldsView' => 'usuarios/fields']) ?>
+<?= view('crud/modal',['title' => $title,'camposView' => 'usuarios/fields']) ?>
 
 <?= $this->endSection() ?>
 

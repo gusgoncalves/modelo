@@ -10,7 +10,7 @@
                 <div class="modal-body">
                     <input type="hidden" name="id" id="crud-id">
 
-                    <?= view($fieldsView) ?>
+                    <?= view($camposView) ?>
                 </div>
 
                 <div class="modal-footer">

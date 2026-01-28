@@ -42,6 +42,7 @@ class Install extends BaseController
             'label' => 'PHP >= 8.1',
             'ok'    => version_compare(PHP_VERSION, '8.1', '>='),
             'value' => PHP_VERSION,
+            'required' => true,
         ];
 
         // Extensões base (quase sempre necessárias)
@@ -58,6 +59,7 @@ class Install extends BaseController
                 'label' => "Extensão {$label}",
                 'ok'    => extension_loaded($ext),
                 'value' => extension_loaded($ext) ? 'OK' : 'Não instalada',
+                'required' => true,
             ];
         }
 
@@ -68,18 +70,21 @@ class Install extends BaseController
             'label' => 'PDO habilitado',
             'ok'    => class_exists(\PDO::class),
             'value' => class_exists(\PDO::class) ? 'OK' : 'Não habilitado',
+            'required' => true,
         ];
 
         $checks[] = [
             'label' => 'PDO MySQL (pdo_mysql)',
             'ok'    => in_array('mysql', $pdoDrivers, true),
             'value' => in_array('mysql', $pdoDrivers, true) ? 'OK' : 'Não instalado',
+            'required' => true,
         ];
 
         $checks[] = [
             'label' => 'PDO PostgreSQL (pdo_pgsql)',
             'ok'    => in_array('pgsql', $pdoDrivers, true),
             'value' => in_array('pgsql', $pdoDrivers, true) ? 'OK' : 'Não instalado',
+            'required' => true,
         ];
 
         // Drivers nativos (não são obrigatórios, mas ajudam)
@@ -87,12 +92,14 @@ class Install extends BaseController
             'label' => 'MySQLi (opcional)',
             'ok'    => extension_loaded('mysqli'),
             'value' => extension_loaded('mysqli') ? 'OK' : 'Não instalado',
+            'required' => false,
         ];
 
         $checks[] = [
             'label' => 'PgSQL (opcional)',
             'ok'    => extension_loaded('pgsql'),
             'value' => extension_loaded('pgsql') ? 'OK' : 'Não instalado',
+            'required' => false,
         ];
 
         // LDAP (só obrigatório se for usar AD, mas já avisamos aqui)
@@ -100,6 +107,7 @@ class Install extends BaseController
             'label' => 'LDAP (necessário se usar autenticação AD)',
             'ok'    => extension_loaded('ldap'),
             'value' => extension_loaded('ldap') ? 'OK' : 'Não instalado',
+            'required' => false,
         ];
 
         // Permissões
@@ -107,24 +115,28 @@ class Install extends BaseController
             'label' => 'Pasta writable/ com permissão de escrita',
             'ok'    => is_writable(WRITEPATH),
             'value' => is_writable(WRITEPATH) ? 'OK' : 'Sem permissão',
+            'required' => true,
         ];
 
         $checks[] = [
             'label' => 'Pasta writable/cache com permissão',
             'ok'    => is_writable(WRITEPATH . 'cache'),
             'value' => is_writable(WRITEPATH . 'cache') ? 'OK' : 'Sem permissão',
+            'required' => true,
         ];
 
         $checks[] = [
             'label' => 'Pasta writable/session com permissão',
             'ok'    => is_writable(WRITEPATH . 'session'),
             'value' => is_writable(WRITEPATH . 'session') ? 'OK' : 'Sem permissão',
+            'required' => true,
         ];
 
         $checks[] = [
             'label' => 'Pasta public/assets/img com permissão',
             'ok'    => is_dir(ROOTPATH . 'public/assets/img') && is_writable(ROOTPATH . 'public/assets/img'),
             'value' => (is_dir(ROOTPATH . 'public/assets/img') && is_writable(ROOTPATH . 'public/assets/img')) ? 'OK' : 'Sem permissão ou não existe',
+            'required' => true,
         ];
 
         // .env
@@ -134,7 +146,17 @@ class Install extends BaseController
             'label' => 'Permissão para criar/editar .env',
             'ok'    => (!file_exists($envPath) && is_writable(ROOTPATH)) || (file_exists($envPath) && is_writable($envPath)),
             'value' => file_exists($envPath) ? (is_writable($envPath) ? 'OK' : 'Sem permissão') : 'Será criado',
+            'required' => true,
         ];
+        
+        $canInstall = true;
+
+        foreach ($checks as $c) {
+            if ($c['required'] === true && $c['ok'] === false) {
+                $canInstall = false;
+                break;
+            }
+        }
 
         // Resultado final
         $allOk = !in_array(false, array_column($checks, 'ok'), true);
@@ -148,6 +170,7 @@ class Install extends BaseController
         return view('install/check', [
             'checks' => $checks,
             'allOk'  => $allOk,
+            'canInstall' => $canInstall,
         ]);
     }
 

@@ -14,7 +14,10 @@
 </div>
 <div class="mb-3">
     <label class="form-label">Permissao</label>
-    <input type="text" name="permissao" class="form-control">
+    <select  name="permissao" class="form-control">
+        <option value="Admin1">Admin</option>
+        <option value="User1">User</option>
+    </select>
 </div>
 <div class="mb-3">
     <label class="form-label">Email</label>
@@ -22,5 +25,8 @@
 </div>
 <div class="mb-3">
     <label class="form-label">Ativo</label>
-    <input type="text" name="ativo" class="form-control">
+    <select name="ativo" class="form-control">
+        <option value="1">Sim</option>
+        <option value="0">Não</option>
+    </select>
 </div>
