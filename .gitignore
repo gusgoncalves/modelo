@@ -127,6 +127,7 @@ _modules/*
 
 # Install
 /public/install.lock
+/public/assets/img/*
 
 # Session
 writable/session/*
