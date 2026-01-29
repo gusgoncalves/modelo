@@ -128,3 +128,6 @@ _modules/*
 # Install
 /public/install.lock
 
+# Session
+writable/session/*
+
