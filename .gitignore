@@ -130,6 +130,7 @@ _modules/*
 /public/assets/img/*
 
 # Session
-writable/session/*
+writable/session/
+public/writable/
 !writable/session/.gitkeep
 
