@@ -1,13 +1,13 @@
 <aside class="sidebar bg-light border-end pt-5">
     <ul class="nav flex-column px-3">
         <li class="nav-item mb-2">
-            <a class="nav-link active" href="<?= base_url('/teste') ?>">
+            <a class="nav-link active" href="<?= base_url('/dashboard') ?>">
                 <i class="bi bi-house"></i> Dashboard
             </a>
         </li>
         <li class="nav-item mb-2">
-            <a class="nav-link" href="#">
-                <i class="bi bi-gear"></i> Configurações
+            <a class="nav-link" href="<?= base_url('/usuarios') ?>">
+                <i class="bi bi-gear"></i> Usuarios
             </a>
         </li>
     </ul>

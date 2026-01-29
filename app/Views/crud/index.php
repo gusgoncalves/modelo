@@ -24,6 +24,7 @@
         processing: true,
         serverSide: true,
         ajax: endpoint + '/datatable',
+        pageLength: 100,
         columns: <?= json_encode($columns) ?>.concat([
             {
                 data: null,

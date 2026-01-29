@@ -3,27 +3,43 @@
 namespace App\Database\Seeds;
 
 use CodeIgniter\Database\Seeder;
+use Faker\Factory;
 
 class UserSeeder extends Seeder
 {
-     public function setAdmin(array $data)
-    {
-        $this->admin = $data;
-        return $this;
-    }
-
     public function run()
     {
-        if (empty($this->admin)) {
-            throw new \RuntimeException('Dados do admin não foram definidos no Seeder.');
+        $faker = Factory::create('pt_BR');
+
+        $db = \Config\Database::connect();
+        $builder = $db->table('usuarios');
+
+        $total = 22000;
+        $batchSize = 200;
+
+        $data = [];
+
+        for ($i = 1; $i <= $total; $i++) {
+
+            $data[] = [
+                'nome'       => $faker->name(),
+                'cpf'        => $faker->numerify('###########'),
+                'matricula'  => $faker->unique()->numerify('############'),
+                'email'      => $faker->unique()->safeEmail(),
+                'senha'      => password_hash('123456', PASSWORD_DEFAULT),
+                'ativo'      => 1,
+            ];
+
+            if ($i % $batchSize === 0) {
+                $builder->insertBatch($data);
+                $data = [];
+            }
         }
-       $this->db->table('usuarios')->insert([
-            'matricula' => $this->admin['login'],
-            'nome'      => $this->admin['nome'],
-            'cpf'       => $this->admin['cpf'],
-            'email'     => $this->admin['email'],
-            'permissao' => $this->admin['permissao'],
-            'senha'     => password_hash('123456', PASSWORD_DEFAULT),
-        ]);
+
+        if (!empty($data)) {
+            $builder->insertBatch($data);
+        }
+
+        echo "✅ $total usuários inseridos com insertBatch.\n";
     }
 }
