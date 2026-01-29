@@ -131,4 +131,5 @@ _modules/*
 
 # Session
 writable/session/*
+!writable/session/.gitkeep
 

@@ -116,10 +116,11 @@ class Usuarios extends CrudController
     public function index()
     {
         return view('crud/index', [
-            'title'    => 'Usuários',
-            'endpoint' => 'usuarios',
-            'columns'  => $this->datatableColumns,
-            'formFields' => $this->formFields
+            'title'         => env('app.systemName').' - '.'Usuarios',
+            'endpoint'      => 'usuarios',
+            'columns'       => $this->datatableColumns,
+            'formFields'    => $this->formFields,
+            'logo'          =>env('app.systemLogo'),
         ]);
     }
 }
